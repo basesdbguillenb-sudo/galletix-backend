@@ -1,3 +1,8 @@
+# Actualización para forzar un despliegue nuevo en Vercel
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+# ... (el resto de tu código hacia abajo se queda exactamente igual)
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
