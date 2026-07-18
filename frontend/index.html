@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galletix POS - Punto de Venta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Galletix POS</h1>
+        <p>Cajero Activo: Empleado de Turno</p>
+    </header>
+
+    <main class="contenedor-principal">
+        <!-- Sección Izquierda: Lista de Productos -->
+        <section class="seccion-productos">
+            <h2>Productos Disponibles</h2>
+            <div id="grid-productos" class="grid-productos">
+                <!-- Los productos se cargarán aquí desde Python -->
+                <p>Cargando productos...</p>
+            </div>
+        </section>
+
+        <!-- Sección Derecha: Orden Actual -->
+        <section class="seccion-orden">
+            <h2>Orden Actual</h2>
+            <ul id="lista-carrito">
+                <!-- Los items del carrito irán aquí -->
+            </ul>
+            
+            <div class="totales">
+                <h3>Total: $<span id="total-orden">0.00</span></h3>
+            </div>
+
+            <form id="formulario-pago">
+                <label for="metodo-pago">Método de Pago:</label>
+                <select id="metodo-pago" required>
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                </select>
+
+                <!-- Este campo se oculta por defecto y se muestra si eligen Transferencia -->
+                <div id="contenedor-comprobante" style="display: none; margin-top: 15px;">
+                    <label for="foto-comprobante">Subir Comprobante (Obligatorio):</label>
+                    <input type="file" id="foto-comprobante" accept="image/*">
+                </div>
+
+                <button type="submit" class="btn-pagar">Completar Venta</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
