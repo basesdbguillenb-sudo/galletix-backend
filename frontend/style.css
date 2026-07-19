@@ -93,3 +93,40 @@ header {
 .btn-pagar:hover {
     background-color: #45a049;
 }
+
+/* --- Ajustes para celular --- */
+@media (max-width: 768px) {
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px 15px;
+    }
+
+    .contenedor-principal {
+        flex-direction: column;
+        height: auto;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .seccion-productos,
+    .seccion-orden {
+        flex: none;
+        width: 100%;
+    }
+
+    .grid-productos {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .tarjeta-producto {
+        padding: 10px;
+    }
+
+    #lista-carrito {
+        max-height: 200px;
+    }
+}
