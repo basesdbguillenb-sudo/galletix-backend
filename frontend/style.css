@@ -130,3 +130,115 @@ header {
         max-height: 200px;
     }
 }
+
+/* --- Panel de Administración (agregar al final de style.css) --- */
+
+.btn-secundario {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-secundario:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.contenedor-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.panel-admin {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.filtro-fechas {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filtro-fechas label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.filtro-fechas input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.resumen-totales {
+    background: #fff8ec;
+    border: 1px solid #ffd699;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+}
+
+.resumen-totales ul {
+    margin: 5px 0 0;
+    padding-left: 20px;
+}
+
+.tabla-scroll {
+    overflow-x: auto;
+}
+
+#tabla-ventas {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tabla-ventas th,
+#tabla-ventas td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.lista-usuarios {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.lista-usuarios li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.form-usuario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.form-usuario input,
+.form-usuario select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Ajustes en celular */
+@media (max-width: 768px) {
+    .filtro-fechas {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

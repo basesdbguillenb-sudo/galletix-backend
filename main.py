@@ -1,22 +1,12 @@
-# Actualización para forzar un despliegue nuevo en Vercel
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-# ... (el resto de tu código hacia abajo se queda exactamente igual)
-
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from supabase import create_client, Client
-from pydantic import BaseModel
-import uuid
-
-# 1. Configuración de Supabase
 import os
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from typing import Optional
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from pydantic import BaseModel
 import uuid
 
+# 1. Configuración de Supabase (se lee desde las Environment Variables de Vercel)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -27,7 +17,7 @@ app = FastAPI(title="Galletix POS API")
 # Habilitar CORS para que el Frontend (HTML/JS) pueda comunicarse con esta API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # En producción cambiaremos esto por la URL de tu Vercel
+    allow_origins=["*"],  # En producción cambiaremos esto por la URL de tu Vercel
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,70 +30,96 @@ class Producto(BaseModel):
     precio: float
     stock: int
 
-# --- RUTAS DE LA API ---
-
-@app.get("/")
-def leer_raiz():
-    return {"mensaje": "Bienvenido a la API del POS de Galletix"}
-
 class LoginData(BaseModel):
     email: str
     password: str
 
-@app.post("/login")
-def iniciar_sesion(datos: LoginData):
-    """Verifica las credenciales del usuario con Supabase."""
-    try:
-        # Intentamos iniciar sesión usando el cliente de Supabase
-        respuesta = supabase.auth.sign_in_with_password({
-            "email": datos.email,
-            "password": datos.password
-        })
-        
-        # Si tiene éxito, extraemos el ID del usuario y su rol
-        return {
-            "mensaje": "Inicio de sesión exitoso", 
-            "usuario_id": respuesta.user.id
-        }
-    except Exception as e:
-        print(f"Error de login: {e}")
-        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
-
-# Modelo de datos para el registro
 class RegistroData(BaseModel):
     email: str
     password: str
     nombre: str
     rol: str
 
-@app.post("/registro")
-def registrar_usuario(datos: RegistroData):
-    """Registra un nuevo usuario en Supabase y crea su perfil en la base de datos."""
+# --- Utilidad: exige que quien llama sea ADMIN ---
+def verificar_admin(x_usuario_id: str = Header(..., alias="X-Usuario-Id")) -> str:
+    """
+    Se usa como dependencia en rutas que solo debe poder usar el dueño/admin.
+    El frontend manda el ID del usuario logueado en el header X-Usuario-Id,
+    y acá se confirma que ese usuario tenga rol ADMIN en la tabla 'profiles'.
+    """
     try:
-        # 1. Crear el usuario en el sistema de Autenticación de Supabase
+        perfil = supabase.table("profiles").select("rol").eq("id", x_usuario_id).single().execute()
+    except Exception:
+        raise HTTPException(status_code=403, detail="No autorizado.")
+
+    if not perfil.data or perfil.data.get("rol") != "ADMIN":
+        raise HTTPException(status_code=403, detail="Acceso solo para administradores.")
+
+    return x_usuario_id
+
+# --- RUTAS DE LA API ---
+
+@app.get("/")
+def leer_raiz():
+    return {"mensaje": "Bienvenido a la API del POS de Galletix"}
+
+@app.post("/login")
+def iniciar_sesion(datos: LoginData):
+    """Verifica las credenciales del usuario con Supabase y devuelve su nombre y rol."""
+    try:
+        respuesta = supabase.auth.sign_in_with_password({
+            "email": datos.email,
+            "password": datos.password
+        })
+        usuario_id = respuesta.user.id
+
+        perfil = supabase.table("profiles").select("nombre, rol").eq("id", usuario_id).single().execute()
+
+        return {
+            "mensaje": "Inicio de sesión exitoso",
+            "usuario_id": usuario_id,
+            "nombre": perfil.data["nombre"] if perfil.data else "",
+            "rol": perfil.data["rol"] if perfil.data else "EMPLEADO"
+        }
+    except Exception as e:
+        print(f"Error de login: {e}")
+        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
+
+@app.post("/registro")
+def registrar_usuario(datos: RegistroData, admin_id: str = Depends(verificar_admin)):
+    """Registra un nuevo usuario. Solo un ADMIN puede crear usuarios nuevos."""
+    try:
         respuesta_auth = supabase.auth.sign_up({
             "email": datos.email,
             "password": datos.password
         })
-        
+
         usuario_id = respuesta_auth.user.id
-        
-        # 2. Guardar los detalles del empleado en nuestra tabla 'profiles'
+
         nuevo_perfil = {
             "id": usuario_id,
             "nombre": datos.nombre,
             "rol": datos.rol  # Debe ser 'ADMIN' o 'EMPLEADO'
         }
         supabase.table("profiles").insert(nuevo_perfil).execute()
-        
+
         return {
-            "mensaje": "Usuario creado exitosamente", 
+            "mensaje": "Usuario creado exitosamente",
             "usuario_id": usuario_id
         }
-        
+
     except Exception as e:
         print(f"Error en registro: {e}")
         raise HTTPException(status_code=400, detail=f"No se pudo registrar el usuario: {str(e)}")
+
+@app.get("/usuarios")
+def obtener_usuarios(admin_id: str = Depends(verificar_admin)):
+    """Lista todos los usuarios del sistema (nombre y rol). Solo ADMIN."""
+    try:
+        respuesta = supabase.table("profiles").select("id, nombre, rol").execute()
+        return respuesta.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- Módulo de Productos ---
 
@@ -117,7 +133,6 @@ def obtener_productos():
 def crear_producto(producto: Producto):
     """Crea un nuevo producto en el inventario y maneja errores."""
     try:
-        # 1. Preparamos el diccionario con los datos del producto
         nuevo_producto = {
             "nombre": producto.nombre,
             "descripcion": producto.descripcion,
@@ -125,18 +140,12 @@ def crear_producto(producto: Producto):
             "stock": producto.stock,
             "activo": True
         }
-        
-        # 2. Intentamos insertar el registro en Supabase
         respuesta = supabase.table("productos").insert(nuevo_producto).execute()
         return {"mensaje": "Producto creado con éxito", "datos": respuesta.data}
-        
     except Exception as e:
-        # 3. Si algo falla, atrapamos la excepción y la imprimimos en la terminal
         print("\n>>> ERROR DETALLADO AL GUARDAR EL PRODUCTO:")
         print(str(e))
         print(">>> --------------------------------------\n")
-        
-        # Devolvemos el error de forma segura al frontend
         raise HTTPException(status_code=400, detail=f"Falla en la base de datos: {str(e)}")
 
 # --- Módulo de Ventas y Comprobantes ---
@@ -157,7 +166,7 @@ async def registrar_venta(
         if metodo_pago == "TRANSFERENCIA":
             if not comprobante:
                 raise HTTPException(status_code=400, detail="Debe adjuntar comprobante.")
-            
+
             extension = comprobante.filename.split(".")[-1]
             nombre_archivo = f"{uuid.uuid4()}.{extension}"
             contenido_archivo = await comprobante.read()
@@ -174,20 +183,45 @@ async def registrar_venta(
             "metodo_pago": metodo_pago,
             "comprobante_url": comprobante_url
         }
-        
+
         respuesta_db = supabase.table("ventas").insert(nueva_venta).execute()
         return {"mensaje": "Venta registrada exitosamente", "venta": respuesta_db.data}
 
     except Exception as e:
         print(f">>> ERROR EN VENTAS: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.get("/ventas")
-def obtener_ventas():
-    """Obtiene el historial de ventas para el panel de administración, ordenado por fecha."""
+def obtener_ventas(
+    fecha_inicio: Optional[str] = None,
+    fecha_fin: Optional[str] = None,
+    admin_id: str = Depends(verificar_admin)
+):
+    """
+    Historial de ventas para el panel de administración.
+    - Filtrable por rango de fechas con ?fecha_inicio=...&fecha_fin=...
+    - Incluye el nombre del empleado que hizo cada venta.
+    - Solo accesible para usuarios con rol ADMIN.
+    """
     try:
-        respuesta = supabase.table("ventas").select("*").order("fecha", desc=True).execute()
-        return respuesta.data
+        query = supabase.table("ventas").select("*").order("fecha", desc=True)
+
+        if fecha_inicio:
+            query = query.gte("fecha", fecha_inicio)
+        if fecha_fin:
+            query = query.lte("fecha", fecha_fin)
+
+        ventas = query.execute().data
+
+        # Traemos los nombres de los empleados para no depender de una relación
+        # configurada en la base de datos, y los "pegamos" a cada venta.
+        perfiles = supabase.table("profiles").select("id, nombre").execute().data
+        mapa_nombres = {p["id"]: p["nombre"] for p in perfiles}
+
+        for venta in ventas:
+            venta["empleado_nombre"] = mapa_nombres.get(venta["empleado_id"], "Desconocido")
+
+        return ventas
     except Exception as e:
         print(f">>> ERROR AL OBTENER VENTAS: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

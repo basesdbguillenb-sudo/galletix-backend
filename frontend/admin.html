@@ -3,58 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Galletix POS</title>
+    <title>Galletix POS - Panel de Administración</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header style="background-color: #2c3e50;"> <!-- Color diferente para distinguir del cajero -->
-        <h1>Galletix SaaS - Panel de Administración</h1>
-        <a href="index.html" style="color: white; text-decoration: none; border: 1px solid white; padding: 5px 10px; border-radius: 4px;">Ir al Cajero</a>
+    <header>
+        <h1>Galletix POS · Admin</h1>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <span id="nombre-admin"></span>
+            <button id="btn-salir" class="btn-secundario">Cerrar sesión</button>
+        </div>
     </header>
 
-    <main class="contenedor-principal" style="flex-direction: column; overflow-y: auto;">
-        
-        <!-- Sección para Agregar Productos -->
-        <section class="seccion-productos" style="margin-bottom: 20px;">
-            <h2>Agregar Nuevo Producto</h2>
-            <form id="form-producto" style="display: flex; gap: 10px; align-items: flex-end;">
+    <main class="contenedor-admin">
+
+        <section class="panel-admin">
+            <h2>Reporte de Ventas</h2>
+
+            <form id="form-filtro" class="filtro-fechas">
                 <div>
-                    <label>Nombre:</label><br>
-                    <input type="text" id="prod-nombre" required>
+                    <label for="fecha-inicio">Desde:</label>
+                    <input type="date" id="fecha-inicio">
                 </div>
                 <div>
-                    <label>Descripción:</label><br>
-                    <input type="text" id="prod-desc">
+                    <label for="fecha-fin">Hasta:</label>
+                    <input type="date" id="fecha-fin">
                 </div>
-                <div>
-                    <label>Precio ($):</label><br>
-                    <input type="number" id="prod-precio" step="0.01" required>
-                </div>
-                <div>
-                    <label>Stock inicial:</label><br>
-                    <input type="number" id="prod-stock" value="100" required>
-                </div>
-                <button type="submit" class="btn-pagar" style="margin: 0; padding: 10px;">Guardar Producto</button>
+                <button type="submit" class="btn-pagar">Filtrar</button>
             </form>
+
+            <div id="resumen-totales" class="resumen-totales"></div>
+
+            <div class="tabla-scroll">
+                <table id="tabla-ventas">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Empleado</th>
+                            <th>Método</th>
+                            <th>Total</th>
+                            <th>Comprobante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-ventas">
+                        <tr><td colspan="5">Cargando ventas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
-        <!-- Sección de Auditoría de Ventas -->
-        <section class="seccion-orden">
-            <h2>Auditoría de Ventas</h2>
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <tr style="background-color: #eee;">
-                        <th style="padding: 10px; border-bottom: 2px solid #ccc;">ID Venta</th>
-                        <th style="padding: 10px; border-bottom: 2px solid #ccc;">Fecha</th>
-                        <th style="padding: 10px; border-bottom: 2px solid #ccc;">Total</th>
-                        <th style="padding: 10px; border-bottom: 2px solid #ccc;">Método</th>
-                        <th style="padding: 10px; border-bottom: 2px solid #ccc;">Comprobante</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-ventas">
-                    <!-- Las ventas se cargarán aquí -->
-                </tbody>
-            </table>
+        <section class="panel-admin">
+            <h2>Usuarios del Sistema</h2>
+
+            <ul id="lista-usuarios" class="lista-usuarios">
+                <li>Cargando usuarios...</li>
+            </ul>
+
+            <h3>Agregar nuevo usuario</h3>
+            <form id="form-usuario" class="form-usuario">
+                <input type="text" id="nuevo-nombre" placeholder="Nombre completo" required>
+                <input type="email" id="nuevo-email" placeholder="Correo electrónico" required>
+                <input type="password" id="nuevo-password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6">
+                <select id="nuevo-rol" required>
+                    <option value="EMPLEADO">Empleado</option>
+                    <option value="ADMIN">Administrador</option>
+                </select>
+                <button type="submit" class="btn-pagar">Crear Usuario</button>
+            </form>
+            <p id="mensaje-usuario" style="display:none; margin-top:10px;"></p>
         </section>
 
     </main>

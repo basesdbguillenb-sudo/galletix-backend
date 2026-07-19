@@ -20,11 +20,18 @@ formLogin.addEventListener("submit", async (e) => {
         const resultado = await respuesta.json();
 
         if (respuesta.ok) {
-            // Guardamos el ID real del empleado en el navegador
+            // Guardamos la identidad del usuario logueado en el navegador
             localStorage.setItem("empleado_id", resultado.usuario_id);
-            
-            // Redirigimos al panel del cajero
-            window.location.href = "index.html";
+            localStorage.setItem("nombre", resultado.nombre);
+            localStorage.setItem("rol", resultado.rol);
+
+            // Redirigimos según el rol: el dueño va al panel admin,
+            // el resto de empleados va directo al punto de venta.
+            if (resultado.rol === "ADMIN") {
+                window.location.href = "admin.html";
+            } else {
+                window.location.href = "index.html";
+            }
         } else {
             // Mostrar error visual si las credenciales fallan
             mensajeError.innerText = resultado.detail;
