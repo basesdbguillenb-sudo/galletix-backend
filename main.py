@@ -10,6 +10,13 @@ from pydantic import BaseModel
 import uuid
 
 # 1. Configuración de Supabase
+import os
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from supabase import create_client, Client
+from pydantic import BaseModel
+import uuid
+
 SUPABASE_URL = os.environ.get("https://lnjvqatjbjpcaqumrpwp.supabase.co")
 SUPABASE_KEY = os.environ.get("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuanZxYXRqYmpwY2FxdW1ycHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNTMzMzcsImV4cCI6MjA5OTkyOTMzN30.KVrbYMHl5p9vgaus1YIFkgwQjMe-lB-sKAYjt6Ycqyw")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
