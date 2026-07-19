@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "https://galletix-backend.vercel.app";
 
 const formProducto = document.getElementById("form-producto");
 const tablaVentas = document.getElementById("tabla-ventas");

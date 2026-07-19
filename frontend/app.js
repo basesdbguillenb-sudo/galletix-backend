@@ -1,5 +1,5 @@
 // La URL donde está corriendo tu servidor de Python (FastAPI)
-const API_URL = "http://localhost:8000";
+const API_URL = "https://galletix-backend.vercel.app";
 
 // Variables globales para manejar el estado
 let carrito = [];
